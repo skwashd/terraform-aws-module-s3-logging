@@ -1,50 +1,50 @@
 data "aws_iam_policy_document" "bucket" {
 
-  # Allow the current terraform user to manage the bucket permissions
+  ## Common
   statement {
-    sid = "TerraformManageBucket"
+    sid = "IAM"
     actions = [
       "s3:*"
     ]
     resources = [
       aws_s3_bucket.this.arn,
-    ]
-    principals {
-      type = "AWS"
-      identifiers = [
-        data.aws_iam_session_context.current.issuer_arn
-      ]
-    }
-  }
-
-  # Users should only be allowed to read the logs
-  statement {
-    sid = "EnableIAMReads"
-    actions = [
-      "s3:Get*",
-      "s3:List*"
-    ]
-    resources = [
-      aws_s3_bucket.this.arn,
       "${aws_s3_bucket.this.arn}/*"
     ]
+    principals {
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.id}:root"]
+      type        = "AWS"
+    }
+  }
+
+  statement {
+    sid = "LogDeliveryCheckAcl"
+
+    actions = ["s3:GetBucketAcl"]
+
+    resources = [
+      aws_s3_bucket.this.arn,
+    ]
 
     principals {
-      type = "AWS"
+      type = "Service"
       identifiers = [
-        data.aws_caller_identity.current.account_id
+        "delivery.logs.amazonaws.com",
+        "logdelivery.elasticloadbalancing.amazonaws.com",
       ]
     }
   }
 
+  ## ALB
   dynamic "statement" {
     for_each = var.services["alb"] ? [true] : []
 
     content {
-      sid = "AlbAccess"
+      sid = "AlbAccessLegacy"
+
       actions = [
         "s3:PutObject"
       ]
+
       resources = [
         "${aws_s3_bucket.this.arn}/alb/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
       ]
@@ -60,7 +60,8 @@ data "aws_iam_policy_document" "bucket" {
     for_each = var.services["alb"] ? [true] : []
 
     content {
-      sid = "AlbEnforceOwner"
+      sid = "AlbAccessModern"
+
       actions = [
         "s3:PutObject"
       ]
@@ -100,6 +101,7 @@ data "aws_iam_policy_document" "bucket" {
     }
   }
 
+  ## Cloudfront
   dynamic "statement" {
     for_each = var.services["cloudfront"] ? [true] : []
 
@@ -141,6 +143,7 @@ data "aws_iam_policy_document" "bucket" {
     }
   }
 
+  ## S3
   dynamic "statement" {
     for_each = var.services["s3"] ? [true] : []
 
@@ -178,6 +181,7 @@ data "aws_iam_policy_document" "bucket" {
     }
   }
 
+  ## VPC Flows
   dynamic "statement" {
     for_each = var.services["vpc"] ? [true] : []
 
