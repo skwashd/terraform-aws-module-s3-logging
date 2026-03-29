@@ -8,14 +8,14 @@ permissions:
 jobs:
   terraform:
     name: Terraform Validation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3.1.2
+        uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85 # v4.0.0
 
       - name: Run fmt
         run: terraform fmt -diff -check -no-color -recursive
@@ -26,10 +26,10 @@ jobs:
       - name: Run validate
         run: terraform validate -no-color
 
-      - uses: terraform-linters/setup-tflint@v4.1.0
+      - uses: terraform-linters/setup-tflint@b480b8fcdaa6f2c577f8e4fa799e89e756bb7c93 # v6.2.2
         name: Setup TFLint
         with:
-          tflint_version: v0.55.0
+          tflint_version: v0.61.0
 
       - name: Init TFLint
         run: tflint --init
