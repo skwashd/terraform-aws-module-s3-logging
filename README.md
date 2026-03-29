@@ -58,7 +58,7 @@ module "logging_bucket_vpc" {
 }
 ```
 
-## Generated Documentation
+# Generated Documentation
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -66,13 +66,13 @@ module "logging_bucket_vpc" {
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.10.0, <2.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0.0, < 6.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.37.0, < 7.0.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 5.84.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.37.0, < 7.0.0 |
 
 ## Modules
 
@@ -93,14 +93,14 @@ No modules.
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_elb_service_account.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/elb_service_account) | data source |
 | [aws_iam_policy_document.bucket](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
-| [aws_iam_session_context.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_session_context) | data source |
+| [aws_partition.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/partition) | data source |
 | [aws_region.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_prefix"></a> [prefix](#input\_prefix) | The namesapce prefix to prepend to the bucket name. This should be standard for all buckets | `string` | n/a | yes |
+| <a name="input_prefix"></a> [prefix](#input\_prefix) | The namespace prefix to prepend to the bucket name. This should be standard for all buckets | `string` | n/a | yes |
 | <a name="input_services"></a> [services](#input\_services) | A list of services to allow to log to the bucket. Defaults to all supported services | <pre>object({<br/>    alb        = optional(bool, true)<br/>    cloudfront = optional(bool, true)<br/>    s3         = optional(bool, true)<br/>    vpc        = optional(bool, true)<br/>  })</pre> | `{}` | no |
 | <a name="input_suffix"></a> [suffix](#input\_suffix) | Suffix to append to the bucket name. Only required if not all services are enabled | `string` | `""` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to add to all resources | `map(string)` | n/a | yes |
