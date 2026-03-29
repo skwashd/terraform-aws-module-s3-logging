@@ -269,7 +269,10 @@ resource "aws_s3_bucket_policy" "this" {
 
 # tfsec:ignore:aws-s3-enable-bucket-logging This is a logging bucket. We can't enable logging on it.
 resource "aws_s3_bucket" "this" {
-  bucket        = local.bucket_name
+  bucket = local.bucket_name
+
+  bucket_namespace = "account-regional"
+
   force_destroy = false
 
   tags = var.tags

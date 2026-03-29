@@ -1,5 +1,5 @@
 variable "prefix" {
-  description = "The namesapce prefix to prepend to the bucket name. This should be standard for all buckets"
+  description = "The namespace prefix to prepend to the bucket name. This should be standard for all buckets"
   type        = string
 
   validation {
@@ -52,5 +52,9 @@ variable "tags" {
 }
 
 locals {
-  bucket_name = var.suffix != "" ? "${var.prefix}-${data.aws_caller_identity.current.account_id}-logs-${var.suffix}" : "${var.prefix}-${data.aws_caller_identity.current.account_id}-logs-common"
+  partition  = data.aws_partition.current.partition
+  account_id = data.aws_caller_identity.current.account_id
+  region     = data.aws_region.current.region
+
+  bucket_name = var.suffix != "" ? "${var.prefix}-logs-${var.suffix}-${local.account_id}-${local.region}-an" : "${var.prefix}-logs-common-${local.account_id}-${local.region}-an"
 }
