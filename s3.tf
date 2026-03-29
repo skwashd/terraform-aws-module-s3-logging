@@ -208,8 +208,48 @@ data "aws_iam_policy_document" "bucket" {
     }
   }
 
+  ## Route53 Resolver
   dynamic "statement" {
-    for_each = var.services["cloudfront"] || var.services["vpc"] ? [true] : []
+    for_each = var.services["route53resolver"] ? [true] : []
+
+    content {
+      sid = "AWSLogDeliveryRoute53Resolver"
+      actions = [
+        "s3:PutObject"
+      ]
+      resources = [
+        "${aws_s3_bucket.this.arn}/route53resolver/AWSLogs/${local.account_id}/*"
+      ]
+
+      condition {
+        test     = "StringEquals"
+        variable = "s3:x-amz-acl"
+        values   = ["bucket-owner-full-control"]
+      }
+
+      condition {
+        test     = "StringEquals"
+        variable = "aws:SourceAccount"
+        values   = [local.account_id]
+      }
+
+      condition {
+        test     = "ArnLike"
+        variable = "aws:SourceArn"
+        values = [
+          provider::aws::arn_build(local.partition, "logs", local.region, local.account_id, "delivery-source*")
+        ]
+      }
+
+      principals {
+        type        = "Service"
+        identifiers = ["delivery.logs.amazonaws.com"]
+      }
+    }
+  }
+
+  dynamic "statement" {
+    for_each = var.services["cloudfront"] || var.services["route53resolver"] || var.services["vpc"] ? [true] : []
     content {
       sid = "AWSLogDeliveryAclCheck"
       actions = [

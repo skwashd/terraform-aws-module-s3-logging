@@ -24,7 +24,10 @@ variable "services" {
     alb        = optional(bool, true)
     cloudfront = optional(bool, true)
     s3         = optional(bool, true)
-    vpc        = optional(bool, true)
+
+    route53resolver = optional(bool, true)
+
+    vpc = optional(bool, true)
   })
 
   default = {}

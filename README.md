@@ -101,7 +101,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | The namespace prefix to prepend to the bucket name. This should be standard for all buckets | `string` | n/a | yes |
-| <a name="input_services"></a> [services](#input\_services) | A list of services to allow to log to the bucket. Defaults to all supported services | <pre>object({<br/>    alb        = optional(bool, true)<br/>    cloudfront = optional(bool, true)<br/>    s3         = optional(bool, true)<br/>    vpc        = optional(bool, true)<br/>  })</pre> | `{}` | no |
+| <a name="input_services"></a> [services](#input\_services) | A list of services to allow to log to the bucket. Defaults to all supported services | <pre>object({<br/>    alb        = optional(bool, true)<br/>    cloudfront = optional(bool, true)<br/>    s3         = optional(bool, true)<br/><br/>    route53resolver = optional(bool, true)<br/><br/>    vpc = optional(bool, true)<br/>  })</pre> | `{}` | no |
 | <a name="input_suffix"></a> [suffix](#input\_suffix) | Suffix to append to the bucket name. Only required if not all services are enabled | `string` | `""` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to add to all resources | `map(string)` | n/a | yes |
 
