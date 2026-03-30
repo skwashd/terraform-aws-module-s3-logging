@@ -11,26 +11,8 @@ data "aws_iam_policy_document" "bucket" {
       "${aws_s3_bucket.this.arn}/*"
     ]
     principals {
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.id}:root"]
+      identifiers = [provider::aws::arn_build(local.partition, "iam", "", local.account_id, "root")]
       type        = "AWS"
-    }
-  }
-
-  statement {
-    sid = "LogDeliveryCheckAcl"
-
-    actions = ["s3:GetBucketAcl"]
-
-    resources = [
-      aws_s3_bucket.this.arn,
-    ]
-
-    principals {
-      type = "Service"
-      identifiers = [
-        "delivery.logs.amazonaws.com",
-        "logdelivery.elasticloadbalancing.amazonaws.com",
-      ]
     }
   }
 
@@ -46,7 +28,7 @@ data "aws_iam_policy_document" "bucket" {
       ]
 
       resources = [
-        "${aws_s3_bucket.this.arn}/alb/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
+        "${aws_s3_bucket.this.arn}/alb/AWSLogs/${local.account_id}/*"
       ]
 
       principals {
@@ -66,7 +48,7 @@ data "aws_iam_policy_document" "bucket" {
         "s3:PutObject"
       ]
       resources = [
-        "${aws_s3_bucket.this.arn}/alb/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
+        "${aws_s3_bucket.this.arn}/alb/AWSLogs/${local.account_id}/*"
       ]
 
       principals {
@@ -95,8 +77,19 @@ data "aws_iam_policy_document" "bucket" {
       ]
 
       principals {
-        identifiers = ["delivery.logs.amazonaws.com"]
-        type        = "Service"
+        type = "Service"
+        identifiers = [
+          "delivery.logs.amazonaws.com",
+          "logdelivery.elasticloadbalancing.amazonaws.com",
+        ]
+      }
+
+      condition {
+        test     = "StringEquals"
+        variable = "aws:SourceAccount"
+        values = [
+          local.account_id
+        ]
       }
     }
   }
@@ -111,7 +104,7 @@ data "aws_iam_policy_document" "bucket" {
         "s3:PutObject"
       ]
       resources = [
-        "${aws_s3_bucket.this.arn}/cloudfront/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
+        "${aws_s3_bucket.this.arn}/cloudfront/AWSLogs/${local.account_id}/*"
       ]
 
       condition {
@@ -124,7 +117,7 @@ data "aws_iam_policy_document" "bucket" {
         test     = "StringEquals"
         variable = "aws:SourceAccount"
         values = [
-          data.aws_caller_identity.current.account_id
+          local.account_id
         ]
       }
 
@@ -132,7 +125,7 @@ data "aws_iam_policy_document" "bucket" {
         test     = "ArnLike"
         variable = "aws:SourceArn"
         values = [
-          "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:delivery-source*"
+          provider::aws::arn_build(local.partition, "logs", local.region, local.account_id, "delivery-source*")
         ]
       }
 
@@ -164,18 +157,10 @@ data "aws_iam_policy_document" "bucket" {
       }
 
       condition {
-        test     = "ArnLike"
-        variable = "aws:SourceArn"
-        values = [
-          "arn:aws:s3:::${var.prefix}-${data.aws_caller_identity.current.account_id}-*"
-        ]
-      }
-
-      condition {
         test     = "StringEquals"
         variable = "aws:SourceAccount"
         values = [
-          data.aws_caller_identity.current.account_id
+          local.account_id
         ]
       }
     }
@@ -191,7 +176,7 @@ data "aws_iam_policy_document" "bucket" {
         "s3:PutObject"
       ]
       resources = [
-        "${aws_s3_bucket.this.arn}/vpc/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
+        "${aws_s3_bucket.this.arn}/vpc/AWSLogs/${local.account_id}/*"
       ]
 
       condition {
@@ -204,7 +189,7 @@ data "aws_iam_policy_document" "bucket" {
         test     = "StringEquals"
         variable = "aws:SourceAccount"
         values = [
-          data.aws_caller_identity.current.account_id
+          local.account_id
         ]
       }
 
@@ -212,7 +197,47 @@ data "aws_iam_policy_document" "bucket" {
         test     = "ArnLike"
         variable = "aws:SourceArn"
         values = [
-          "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:delivery-source*"
+          provider::aws::arn_build(local.partition, "logs", local.region, local.account_id, "delivery-source*")
+        ]
+      }
+
+      principals {
+        type        = "Service"
+        identifiers = ["delivery.logs.amazonaws.com"]
+      }
+    }
+  }
+
+  ## Route53 Resolver
+  dynamic "statement" {
+    for_each = var.services["route53resolver"] ? [true] : []
+
+    content {
+      sid = "AWSLogDeliveryRoute53Resolver"
+      actions = [
+        "s3:PutObject"
+      ]
+      resources = [
+        "${aws_s3_bucket.this.arn}/route53resolver/AWSLogs/${local.account_id}/*"
+      ]
+
+      condition {
+        test     = "StringEquals"
+        variable = "s3:x-amz-acl"
+        values   = ["bucket-owner-full-control"]
+      }
+
+      condition {
+        test     = "StringEquals"
+        variable = "aws:SourceAccount"
+        values   = [local.account_id]
+      }
+
+      condition {
+        test     = "ArnLike"
+        variable = "aws:SourceArn"
+        values = [
+          provider::aws::arn_build(local.partition, "logs", local.region, local.account_id, "delivery-source*")
         ]
       }
 
@@ -224,7 +249,7 @@ data "aws_iam_policy_document" "bucket" {
   }
 
   dynamic "statement" {
-    for_each = var.services["cloudfront"] || var.services["vpc"] ? [true] : []
+    for_each = var.services["cloudfront"] || var.services["route53resolver"] || var.services["vpc"] ? [true] : []
     content {
       sid = "AWSLogDeliveryAclCheck"
       actions = [
@@ -238,7 +263,7 @@ data "aws_iam_policy_document" "bucket" {
         test     = "StringEquals"
         variable = "aws:SourceAccount"
         values = [
-          data.aws_caller_identity.current.account_id
+          local.account_id
         ]
       }
 
@@ -246,7 +271,7 @@ data "aws_iam_policy_document" "bucket" {
         test     = "ArnLike"
         variable = "aws:SourceArn"
         values = [
-          "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:delivery-source*"
+          provider::aws::arn_build(local.partition, "logs", local.region, local.account_id, "delivery-source*")
         ]
       }
 
@@ -269,7 +294,10 @@ resource "aws_s3_bucket_policy" "this" {
 
 # tfsec:ignore:aws-s3-enable-bucket-logging This is a logging bucket. We can't enable logging on it.
 resource "aws_s3_bucket" "this" {
-  bucket        = local.bucket_name
+  bucket = local.bucket_name
+
+  bucket_namespace = "account-regional"
+
   force_destroy = false
 
   tags = var.tags
