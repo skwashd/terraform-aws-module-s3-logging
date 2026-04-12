@@ -386,6 +386,10 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
       #tfsec:ignore:aws-s3-enable-encryption This is a logging bucket. We can't enable encryption on it.
       sse_algorithm = "AES256"
     }
+
+    blocked_encryption_types = [
+      "NONE"
+    ]
   }
 }
 
