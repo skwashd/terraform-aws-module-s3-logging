@@ -387,6 +387,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
       sse_algorithm = "AES256"
     }
 
+    bucket_key_enabled = false
+
     blocked_encryption_types = [
       "NONE"
     ]
